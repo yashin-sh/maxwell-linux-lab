@@ -1,0 +1,44 @@
+name: Hardware report
+description: Add or characterize a Maxwell test system
+title: "[hardware] "
+labels: ["hardware"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not post serial numbers, MAC addresses, usernames, or other personal identifiers.
+
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU
+      placeholder: "GeForce GTX 960M / GM107"
+    validations:
+      required: true
+
+  - type: input
+    id: pci
+    attributes:
+      label: PCI ID
+      placeholder: "10de:xxxx"
+    validations:
+      required: true
+
+  - type: input
+    id: system
+    attributes:
+      label: Laptop or desktop model
+    validations:
+      required: true
+
+  - type: textarea
+    id: topology
+    attributes:
+      label: GPU/display topology
+      description: Describe Intel/NVIDIA PRIME topology and external display routing if known.
+
+  - type: textarea
+    id: software
+    attributes:
+      label: Software versions
+      description: Kernel, Mesa, driver, Fedora release, Proton/DXVK when relevant.
