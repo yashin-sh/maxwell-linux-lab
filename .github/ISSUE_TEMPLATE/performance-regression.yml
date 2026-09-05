@@ -1,0 +1,52 @@
+name: Performance regression
+description: Report a reproducible performance regression or bottleneck
+title: "[perf] "
+labels: ["performance"]
+body:
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU and PCI ID
+    validations:
+      required: true
+
+  - type: textarea
+    id: versions
+    attributes:
+      label: Exact software versions
+      description: Kernel, Mesa/NVK, NAK/Mesa SHA, DXVK/Proton if relevant.
+    validations:
+      required: true
+
+  - type: textarea
+    id: workload
+    attributes:
+      label: Workload and deterministic reproduction
+    validations:
+      required: true
+
+  - type: textarea
+    id: before
+    attributes:
+      label: Before measurements
+    validations:
+      required: true
+
+  - type: textarea
+    id: after
+    attributes:
+      label: After / affected measurements
+    validations:
+      required: true
+
+  - type: textarea
+    id: clocks
+    attributes:
+      label: Clocks, thermals, and runtime state
+      description: Include core/memory clocks and temperature if available.
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional evidence
+      description: Frame-time logs, traces, kernel messages, bisect results, etc.
