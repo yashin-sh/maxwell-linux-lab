@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 import platform
 import re
@@ -100,9 +99,18 @@ def _memory_total_kib() -> int | None:
 def _collect_pstates() -> list[dict[str, str]]:
     results: list[dict[str, str]] = []
     debugfs = Path("/sys/kernel/debug/dri")
-    if not debugfs.exists():
+
+    try:
+        if not debugfs.exists():
+            return results
+        paths = sorted(debugfs.glob("*/pstate"))
+    except OSError:
+        # debugfs is commonly mounted but inaccessible to unprivileged users
+        # (including GitHub-hosted CI runners). Inventory collection must stay
+        # read-only and degrade gracefully instead of requiring root.
         return results
-    for path in sorted(debugfs.glob("*/pstate")):
+
+    for path in paths:
         content = _read_text(path)
         if content is not None:
             results.append({"path": str(path), "content": content})
