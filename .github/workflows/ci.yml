@@ -29,3 +29,8 @@ jobs:
           maxwell-lab --help
           maxwell-lab inventory --output /tmp/inventory.json
           test -s /tmp/inventory.json
+          maxwell-lab characterize --output-dir /tmp/reference --public-output /tmp/reference-gm107.md
+          test -s /tmp/reference/raw/inventory.json
+          test -s /tmp/reference/public/inventory.public.json
+          test -s /tmp/reference/public/summary.md
+          test -s /tmp/reference-gm107.md
