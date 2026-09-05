@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "maxwell-linux-lab"
+version = "0.1.0"
+description = "Measurement-first lab tooling for pre-GSP NVIDIA Maxwell Linux performance work"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+  {name = "Maxwell Linux Lab contributors"}
+]
+dependencies = []
+
+[project.scripts]
+maxwell-lab = "maxwell_lab.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
