@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import platform
 import re
@@ -96,6 +97,69 @@ def _memory_total_kib() -> int | None:
     return int(match.group(1)) if match else None
 
 
+def _dmi_value(name: str) -> str | None:
+    return _read_text(Path("/sys/class/dmi/id") / name)
+
+
+def _driver_name(device_path: Path) -> str | None:
+    driver = device_path / "driver"
+    try:
+        if not driver.exists():
+            return None
+        return driver.resolve().name
+    except OSError:
+        return None
+
+
+def _collect_drm_devices() -> list[dict[str, str | None]]:
+    root = Path("/sys/class/drm")
+    results: list[dict[str, str | None]] = []
+    try:
+        paths = sorted(root.glob("card*"))
+    except OSError:
+        return results
+
+    for path in paths:
+        if not re.fullmatch(r"card\d+", path.name):
+            continue
+        device = path / "device"
+        results.append(
+            {
+                "node": path.name,
+                "vendor": _read_text(device / "vendor"),
+                "device": _read_text(device / "device"),
+                "subsystem_vendor": _read_text(device / "subsystem_vendor"),
+                "subsystem_device": _read_text(device / "subsystem_device"),
+                "driver": _driver_name(device),
+            }
+        )
+    return results
+
+
+def _collect_drm_connectors() -> list[dict[str, Any]]:
+    root = Path("/sys/class/drm")
+    results: list[dict[str, Any]] = []
+    try:
+        paths = sorted(root.glob("card*-*"))
+    except OSError:
+        return results
+
+    for path in paths:
+        if not re.match(r"^card\d+-", path.name):
+            continue
+        modes_text = _read_text(path / "modes", max_bytes=16 * 1024) or ""
+        modes = [line for line in modes_text.splitlines() if line][:20]
+        results.append(
+            {
+                "name": path.name,
+                "status": _read_text(path / "status"),
+                "enabled": _read_text(path / "enabled"),
+                "modes": modes,
+            }
+        )
+    return results
+
+
 def _collect_pstates() -> list[dict[str, str]]:
     results: list[dict[str, str]] = []
     debugfs = Path("/sys/kernel/debug/dri")
@@ -105,9 +169,6 @@ def _collect_pstates() -> list[dict[str, str]]:
             return results
         paths = sorted(debugfs.glob("*/pstate"))
     except OSError:
-        # debugfs is commonly mounted but inaccessible to unprivileged users
-        # (including GitHub-hosted CI runners). Inventory collection must stay
-        # read-only and degrade gracefully instead of requiring root.
         return results
 
     for path in paths:
@@ -120,10 +181,14 @@ def _collect_pstates() -> list[dict[str, str]]:
 def _collect_nvidia_pci_runtime_pm() -> list[dict[str, str | None]]:
     devices_root = Path("/sys/bus/pci/devices")
     results: list[dict[str, str | None]] = []
-    if not devices_root.exists():
+    try:
+        if not devices_root.exists():
+            return results
+        devices = sorted(devices_root.iterdir())
+    except OSError:
         return results
 
-    for device in sorted(devices_root.iterdir()):
+    for device in devices:
         vendor = _read_text(device / "vendor")
         class_code = _read_text(device / "class")
         if vendor != "0x10de":
@@ -147,7 +212,7 @@ def _collect_nvidia_pci_runtime_pm() -> list[dict[str, str | None]]:
 
 def collect_inventory(include_hostname: bool = False) -> dict[str, Any]:
     inventory: dict[str, Any] = {
-        "schema_version": 1,
+        "schema_version": 2,
         "platform": {
             "system": platform.system(),
             "release": platform.release(),
@@ -157,13 +222,25 @@ def collect_inventory(include_hostname: bool = False) -> dict[str, Any]:
         },
         "os_release": _parse_os_release(),
         "hardware": {
+            "system_vendor": _dmi_value("sys_vendor"),
+            "product_name": _dmi_value("product_name"),
+            "product_version": _dmi_value("product_version"),
+            "bios_vendor": _dmi_value("bios_vendor"),
+            "bios_version": _dmi_value("bios_version"),
+            "bios_date": _dmi_value("bios_date"),
             "cpu_model": _cpu_model(),
             "memory_total_kib": _memory_total_kib(),
+        },
+        "session": {
+            "type": os.environ.get("XDG_SESSION_TYPE"),
+            "desktop": os.environ.get("XDG_CURRENT_DESKTOP"),
         },
         "graphics": {
             "lspci": _run(["lspci", "-nnk"]),
             "vulkan_summary": _run(["vulkaninfo", "--summary"], timeout=15),
             "opengl_summary": _run(["glxinfo", "-B"]),
+            "prime_providers": _run(["xrandr", "--listproviders"]),
+            "switcherooctl": _run(["switcherooctl", "list"]),
             "nvidia_smi": _run(
                 [
                     "nvidia-smi",
@@ -176,6 +253,8 @@ def collect_inventory(include_hostname: bool = False) -> dict[str, Any]:
             "nouveau_modinfo": _run(["modinfo", "nouveau"]),
             "nvidia_modinfo": _run(["modinfo", "nvidia"]),
             "loaded_modules": _run(["lsmod"]),
+            "drm_devices": _collect_drm_devices(),
+            "drm_connectors": _collect_drm_connectors(),
             "nouveau_pstates": _collect_pstates(),
             "nvidia_pci_runtime_pm": _collect_nvidia_pci_runtime_pm(),
         },

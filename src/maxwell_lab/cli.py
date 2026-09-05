@@ -5,7 +5,9 @@ from pathlib import Path
 import sys
 
 from .bench import run_benchmark
+from .characterize import characterize
 from .collect import collect_inventory, write_json
+from .sanitize import UnsafePublicOutput
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -26,6 +28,26 @@ def build_parser() -> argparse.ArgumentParser:
         "--include-hostname",
         action="store_true",
         help="Include hostname in the inventory. Disabled by default for privacy.",
+    )
+
+    characterize_parser = subparsers.add_parser(
+        "characterize",
+        help="Collect raw local inventory and generate an allowlisted public summary.",
+    )
+    characterize_parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("artifacts/reference"),
+        help="Ignored local directory for raw and sanitized characterization artifacts.",
+    )
+    characterize_parser.add_argument(
+        "--public-output",
+        type=Path,
+        default=None,
+        help=(
+            "Optional tracked Markdown path for the sanitized summary, for example "
+            "hardware/reference-gm107.md. The privacy gate must pass before it is written."
+        ),
     )
 
     run = subparsers.add_parser("run", help="Record one or more executions of a benchmark command.")
@@ -65,6 +87,20 @@ def main(argv: list[str] | None = None) -> int:
         data = collect_inventory(include_hostname=args.include_hostname)
         write_json(args.output, data)
         print(args.output)
+        return 0
+
+    if args.command_name == "characterize":
+        try:
+            outputs = characterize(
+                output_dir=args.output_dir,
+                public_output=args.public_output,
+            )
+        except UnsafePublicOutput as exc:
+            print(f"privacy gate failed: {exc}", file=sys.stderr)
+            return 3
+
+        for label, path in outputs.items():
+            print(f"{label}: {path}")
         return 0
 
     if args.command_name == "run":
