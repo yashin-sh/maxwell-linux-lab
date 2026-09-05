@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project artifacts: may contain large logs or machine-identifying data
+artifacts/
+results/
+captures/
+traces/
+logs/
+*.mangohud.csv
+*.trace
+*.rdc
+*.apitrace
+
+# Local hardware data
+hardware/local/
+inventory*.json
+benchmark*.json
+
+# Local builds / upstream source trees
+worktrees/
+build-mesa/
+build-kernel/
+mesa/
+linux/
+dxvk/
+vkd3d-proton/
+
+# Crash / debug output
+core
+core.*
+*.dmp
+
+# Temporary files
+tmp/
+temp/
+.cache/
