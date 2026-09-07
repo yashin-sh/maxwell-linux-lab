@@ -36,6 +36,19 @@ Make pre-GSP NVIDIA Maxwell hardware a first-class, measurable, maintainable Lin
 - [ ] Add a machine-readable `sources.lock.json` for critical external assumptions
 - [ ] Review external assumptions at each milestone
 
+### Verified upstream constraints — reviewed 2026-09-07
+- [x] NVK requires Linux kernel 6.6 or newer according to current Mesa documentation
+- [x] NVK is Vulkan 1.4 conformant on officially supported GPUs; Maxwell is within NVK's supported hardware range
+- [x] Nouveau documents manual performance-level selection on GM10x Maxwell through the debugfs `pstate` interface
+- [x] Nouveau automatic reclocking through GSP applies to Turing and newer, not GM107
+- [x] Nouveau documents signed-firmware constraints as the reason reclocking is not expected on GM20x/GP10x/GV100 in the same way as GM10x
+- [x] Mesa documents NAK hardware behavior tests in `hw_tests.rs` and instruction-encoding validation against `nvdisasm` in `nvdisasm_tests.rs`
+
+Authoritative references:
+- https://docs.mesa3d.org/drivers/nvk.html
+- https://docs.mesa3d.org/drivers/nvk/external_hardware_docs.html
+- https://nouveau.freedesktop.org/
+
 ---
 
 ## Phase 1 — Reference hardware characterization
@@ -98,6 +111,7 @@ Goal: establish reproducible performance and behavior before changing code.
 - [ ] Archive exact software versions
 
 ### Baseline B — Linux open stack
+- [ ] Verify the reference kernel is Linux 6.6 or newer before treating NVK results as valid
 - [ ] Switch to Nouveau + NVK
 - [ ] Confirm the proprietary module is not bound
 - [ ] Confirm NVK is selected for Vulkan
@@ -198,7 +212,10 @@ Goal: make invisible driver behavior visible before optimization.
 
 Goal: determine whether clocks/power state are the dominant performance bottleneck.
 
+Current upstream expectation: GM107 is part of GM10x, for which Nouveau documents manual performance-level selection through the debugfs `pstate` interface. Automatic GSP reclocking is not a GM107 mechanism; the investigation should focus on validating and improving policy around the existing GM10x mechanisms rather than attempting to port the Turing+ GSP model.
+
 ### Read-only characterization first
+- [ ] Verify the documented GM10x `pstate` interface is present and readable on the reference GM107
 - [ ] Enumerate available GM107 performance states
 - [ ] Observe state at idle
 - [ ] Observe state during Vulkan load
@@ -229,8 +246,9 @@ If a large gap remains at equivalent clocks:
 
 ### Upstream-quality power management
 - [ ] Study Nouveau's existing GM10x clock code
-- [ ] Identify missing automatic policy pieces
+- [ ] Identify missing automatic policy pieces around the existing GM10x mechanisms
 - [ ] Identify firmware constraints
+- [ ] Explicitly avoid assuming the Turing+ GSP reclocking model applies to GM107
 - [ ] Prototype only the smallest necessary policy change
 - [ ] Add hysteresis
 - [ ] Add thermal safeguards
@@ -301,7 +319,8 @@ Goal: improve code generation when shader compilation is proven to be a bottlene
 - [ ] Identify scheduling hazards
 
 ### Maxwell-specific validation
-- [ ] Use NAK hardware tests
+- [ ] Run NAK hardware behavior tests from `src/nouveau/compiler/nak/hw_tests.rs`
+- [ ] Run NAK instruction-encoding tests against `nvdisasm` from `src/nouveau/compiler/nak/nvdisasm_tests.rs`
 - [ ] Use documented Maxwell ISA resources
 - [ ] Compare behavior against known-correct instruction semantics
 - [ ] Add unit tests for each fixed codegen pattern
@@ -409,6 +428,7 @@ Goal: turn validated GM107 work into maintainable architecture-level improvement
 
 ### Broader Maxwell
 - [ ] Document firmware/reclocking differences between Maxwell generations
+- [ ] Treat GM10x manual reclocking support and GM20x signed-firmware constraints as distinct architecture boundaries
 - [ ] Do not assume GM107 power behavior applies to GM20x
 - [ ] Test architecture-specific changes independently
 - [ ] Mark unsupported hypotheses clearly
