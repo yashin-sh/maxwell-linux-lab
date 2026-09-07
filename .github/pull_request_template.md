@@ -37,6 +37,14 @@ Is this:
 
 Explain the evidence for the selected scope.
 
+## Provenance
+
+- [ ] I have read `LEGAL.md` and have the right to submit this contribution under the repository's applicable license.
+- [ ] This change is my original work or uses third-party material only in a license-compatible, properly attributed way.
+- [ ] This change was not copied or reconstructed from confidential, leaked, proprietary, or otherwise restricted material.
+
+If the implementation relies on non-obvious technical information, describe its public or independently developed source here.
+
 ## Safety / recovery
 
 Required for any power-management or kernel change.
