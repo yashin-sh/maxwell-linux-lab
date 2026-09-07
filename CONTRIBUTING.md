@@ -2,6 +2,8 @@
 
 Thank you for helping improve Maxwell support on Linux.
 
+Before contributing, read [`LEGAL.md`](LEGAL.md). Contributions must have clean, explainable provenance and must be legally redistributable.
+
 ## Before opening a change
 
 For performance or driver work:
@@ -13,6 +15,24 @@ For performance or driver work:
 5. keep the proposed change as small as possible
 
 For documentation or lab tooling, normal focused pull requests are welcome.
+
+## Contribution provenance
+
+By submitting a contribution, you represent that you have the right to submit it under the repository's applicable license and that it is either your original work or uses third-party material in a license-compatible, properly attributed way.
+
+Do not contribute code or documentation copied or reconstructed from:
+
+- proprietary NVIDIA source code
+- decompiled or disassembled proprietary driver code
+- leaked, confidential, NDA-covered, or otherwise restricted material
+- proprietary firmware or binary blobs without clear redistribution rights
+- another project without complying with that project's license
+
+Lawful observation, testing, benchmarking, public documentation, independently developed experiments, and appropriately licensed open-source material are acceptable sources.
+
+If the provenance of a change is not obvious, explain it in the pull request. Maintainers may ask for additional provenance information and may reject material whose redistribution rights are unclear.
+
+See [`LEGAL.md`](LEGAL.md) for the full policy.
 
 ## Performance reports
 
@@ -48,6 +68,7 @@ Every performance-affecting PR should answer:
 - What correctness tests were run?
 - What other GPUs/architectures might be affected?
 - How can the change be reverted or recovered from if it touches power management?
+- What is the provenance of the implementation and technical information used?
 
 ## Upstream work
 
